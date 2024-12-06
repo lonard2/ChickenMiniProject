@@ -9,8 +9,6 @@ import UIKit
 
 class ContentView: UIViewController {
     
-    
-    
     // store Meals data
     var meals: [Meal] = []
     
@@ -105,5 +103,6 @@ class ContentView: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = .systemBackground
     }
 }
