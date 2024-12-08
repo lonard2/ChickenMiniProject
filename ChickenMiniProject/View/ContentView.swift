@@ -9,13 +9,11 @@ import UIKit
 
 class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDelegate {
     
-    // store Meals data
-    var meals: [Meal] = []
-    // store filter/area categories
-    var filterCategories: [String] = []
+    var meals: [Meal] = [] // store Meals data
+    var filterCategories: [String] = [] // store filter/area categories
+    
     // store selected filters
     private var selectedFilters: Set<String> = [] // set is unique and efficient on operations
-    
     private var gridViewController: GridViewController!
     
     lazy var titleBar: UILabel = {
@@ -87,32 +85,31 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
     }
     
     private func setupFilterButtons(with categories: [String]) {
-        print("Setting up filter buttons with categories: \(categories)")
         horizontalFilterStackView.arrangedSubviews.forEach { $0.removeFromSuperview() } // clear existing buttons
-        
-        for area in categories {
-            let button = PaddedButton(type: .system)
-            button.setTitle(area, for: .normal)
-            button.setTitleColor(.white, for: .normal)
-            button.titleLabel?.font = selectedFilters.contains(area) ? UIFont.systemFont(ofSize: 14, weight: .regular) : UIFont.systemFont(ofSize: 14, weight: .bold)
-            button.backgroundColor = selectedFilters.contains(area) ? .systemGreen : .systemBlue
-            button.layer.borderWidth = 1
-            button.layer.borderColor = selectedFilters.contains(area) ? UIColor.systemGreen.cgColor : UIColor.systemBlue.cgColor
-            button.layer.cornerRadius = 8
-            
-            button.titlePadding = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-            
-            button.addTarget(self, action: #selector(filterButtonTapped(_:)), for: .touchUpInside)
-            
-            button.translatesAutoresizingMaskIntoConstraints = false // Important for stack view handling
-            button.heightAnchor.constraint(equalToConstant: 40).isActive = true
-            
-            print("Adding button for: \(area), Selected: \(selectedFilters.contains(area))")
-            
-            horizontalFilterStackView.addArrangedSubview(button)
-        }
-        
-        print("Buttons updated. Total buttons: \(horizontalFilterStackView.arrangedSubviews.count)")
+
+        UIView.transition(with: horizontalFilterStackView, duration: 0.5, options: [.transitionCrossDissolve], animations: {
+            for area in categories {
+                let button = PaddedButton(type: .system)
+                button.setTitle(area, for: .normal)
+
+                let isSelected = self.selectedFilters.contains(area)
+                button.setTitleColor(.white, for: .normal)
+                button.titleLabel?.font = isSelected ? UIFont.systemFont(ofSize: 14, weight: .bold) : UIFont.systemFont(ofSize: 14, weight: .regular)
+                button.backgroundColor = isSelected ? .systemGreen : .systemBlue
+                button.layer.borderWidth = 1
+                button.layer.borderColor = isSelected ? UIColor.systemGreen.cgColor : UIColor.systemBlue.cgColor
+                button.layer.cornerRadius = 8
+
+                button.titlePadding = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+                
+                button.addTarget(self, action: #selector(self.filterButtonTapped(_:)), for: .touchUpInside)
+
+                button.translatesAutoresizingMaskIntoConstraints = false
+                button.heightAnchor.constraint(equalToConstant: 40).isActive = true
+                
+                self.horizontalFilterStackView.addArrangedSubview(button)
+            }
+        }, completion: nil)
     }
     
     @objc func filterButtonTapped(_ sender: UIButton) {
@@ -121,19 +118,13 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
         // Update selected filters
         if selectedFilters.contains(filter) {
             selectedFilters.remove(filter) // deselect filter
-            print("Removed filter: \(filter)")
         } else {
             selectedFilters.insert(filter) // select filter
-            print("Added filter: \(filter)")
         }
-
-        // Log current selected filters
-        print("Current selected filters: \(selectedFilters)")
 
         // Set up buttons again with the latest selected filters
         setupFilterButtons(with: filterCategories)
-        
-        applyFilters()
+        applyFilters() // Apply filters after updating the buttons
     }
     
     private func applyFilters() {
@@ -142,15 +133,19 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
             return
         }
         
-        print("Applying filters: \(selectedFilters)")
-        
         let filteredMeals = meals.filter { meal in
             return selectedFilters.contains(meal.strArea)
         }
         
-        gridViewController.meals = filteredMeals
-        gridViewController.reloadCollectionView()
+        guard let collectionView = gridViewController.collectionView else { return }
         
+        // grid items filtering animation
+        UIView.transition(with: collectionView, duration: 0.1, options: [.transitionCrossDissolve], animations: {
+            self.gridViewController.meals = filteredMeals
+            self.gridViewController.reloadCollectionView()
+        }, completion: nil)
+
+
         // Ensure that buttons are set up with the full categories to maintain their states
         setupFilterButtons(with: filterCategories)
     }
@@ -178,7 +173,8 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
             switch result {
             case .success(let meals):
                 self?.meals = meals
-                self?.setupFilterButtons(with: APIHelper.shared.filterCategories)
+                self?.filterCategories = APIHelper.shared.filterCategories // Ensure this has data
+                self?.setupFilterButtons(with: self?.filterCategories ?? []) // Pass the correct categories
                 
                 // pass to GridViewController
                 self?.gridViewController.allMeals = meals
@@ -257,8 +253,15 @@ extension ContentView {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let meals):
-                    self?.gridViewController.meals = meals
-                    self?.gridViewController.reloadCollectionView()
+                    UIView.transition(with: self!.gridViewController.view, duration: 0.1, options: [.transitionCrossDissolve], animations: {
+                        self?.gridViewController.meals = meals
+                        self?.gridViewController.reloadCollectionView()
+                    }, completion: nil)
+                    
+                    // update the filter list, too - based on search list
+                    UIView.animate(withDuration: 0.5, animations: {
+                        self?.updateFilterCategories(with: meals)
+                    })
                 case .failure(let error):
                     print("Search failed: \(error.localizedDescription)")
                 }
@@ -280,8 +283,15 @@ extension ContentView {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let meals):
-                    self?.gridViewController.meals = meals
-                    self?.gridViewController.reloadCollectionView()
+                    UIView.transition(with: self!.gridViewController.view, duration: 0.1, options: [.transitionCrossDissolve], animations: {
+                        self?.gridViewController.meals = meals
+                        self?.gridViewController.reloadCollectionView()
+                    }, completion: nil)
+
+                    UIView.animate(withDuration: 0.5, animations: {
+                        self?.updateFilterCategories(with: meals)
+                    })
+                    
                 case .failure(let error):
                     print("Search failed: \(error.localizedDescription)")
                 }
@@ -292,6 +302,15 @@ extension ContentView {
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         // reset the data after search cancelled
         resetFilter()
+        UIView.animate(withDuration: 0.5, animations: {
+            self.updateFilterCategories(with: self.meals)
+        })
         searchBar.resignFirstResponder()
+    }
+    
+    private func updateFilterCategories(with meals: [Meal]) {
+        let uniqueAreas = Set(meals.compactMap { $0.strArea })
+        self.filterCategories = Array(uniqueAreas)
+        setupFilterButtons(with: self.filterCategories)
     }
 }
