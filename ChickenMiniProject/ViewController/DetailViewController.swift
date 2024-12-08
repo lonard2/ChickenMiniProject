@@ -108,7 +108,9 @@ class DetailViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "square"), for: .normal)
         button.setTitle(title, for: .normal)
-        button.setTitleColor(.systemBlue, for: .normal)
+        button.titleLabel?.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
+        }
         button.contentHorizontalAlignment = .left
         button.tag = tag
         button.addTarget(self, action: #selector(checkboxTapped), for: .touchUpInside)
@@ -147,21 +149,47 @@ class DetailViewController: UIViewController {
         
         let labelPadding: CGFloat = 16
         
+        contentView.addSubview(areaLabelContainer)
+        areaLabelContainer.addSubview(areaLabelImage)
+        areaLabelContainer.addSubview(areaLabel)
+        
+        areaLabelImage.translatesAutoresizingMaskIntoConstraints = false
+        areaLabelImage.bottomAnchor.constraint(equalTo: areaLabelContainer.bottomAnchor, constant: -labelPadding).isActive = true
+        areaLabelImage.leadingAnchor.constraint(equalTo: areaLabelContainer.leadingAnchor, constant: labelPadding).isActive = true
+        areaLabelImage.topAnchor.constraint(equalTo: areaLabelContainer.topAnchor, constant: labelPadding).isActive = true
+
+        areaLabel.translatesAutoresizingMaskIntoConstraints = false
+        areaLabel.bottomAnchor.constraint(equalTo: areaLabelContainer.bottomAnchor, constant: -labelPadding).isActive = true
+        areaLabel.leadingAnchor.constraint(equalTo: areaLabelImage.trailingAnchor, constant: labelPadding).isActive = true
+        areaLabel.trailingAnchor.constraint(equalTo: areaLabelContainer.trailingAnchor, constant: -labelPadding).isActive = true
+        areaLabel.topAnchor.constraint(equalTo: areaLabelContainer.topAnchor, constant: labelPadding).isActive = true
+        
+        areaLabelContainer.translatesAutoresizingMaskIntoConstraints = false
+        areaLabelContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        areaLabelContainer.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 16).isActive = true
+        
         contentView.addSubview(categoryLabelContainer)
+        categoryLabelContainer.addSubview(categoryLabelImage)
         categoryLabelContainer.addSubview(categoryLabel)
+        
+        categoryLabelImage.translatesAutoresizingMaskIntoConstraints = false
+        categoryLabelImage.bottomAnchor.constraint(equalTo: categoryLabelContainer.bottomAnchor, constant: -labelPadding).isActive = true
+        categoryLabelImage.leadingAnchor.constraint(equalTo: categoryLabelContainer.leadingAnchor, constant: labelPadding).isActive = true
+        categoryLabelImage.topAnchor.constraint(equalTo: categoryLabelContainer.topAnchor, constant: labelPadding).isActive = true
+
         categoryLabel.translatesAutoresizingMaskIntoConstraints = false
         categoryLabel.bottomAnchor.constraint(equalTo: categoryLabelContainer.bottomAnchor, constant: -labelPadding).isActive = true
-        categoryLabel.leadingAnchor.constraint(equalTo: categoryLabelContainer.leadingAnchor, constant: labelPadding).isActive = true
+        categoryLabel.leadingAnchor.constraint(equalTo: categoryLabelImage.trailingAnchor, constant: labelPadding).isActive = true
         categoryLabel.trailingAnchor.constraint(equalTo: categoryLabelContainer.trailingAnchor, constant: -labelPadding).isActive = true
         categoryLabel.topAnchor.constraint(equalTo: categoryLabelContainer.topAnchor, constant: labelPadding).isActive = true
         
         categoryLabelContainer.translatesAutoresizingMaskIntoConstraints = false
-        categoryLabelContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        categoryLabelContainer.leadingAnchor.constraint(equalTo: areaLabelContainer.trailingAnchor, constant: 16).isActive = true
         categoryLabelContainer.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 16).isActive = true
         
         contentView.addSubview(ingredientsTitle)
         ingredientsTitle.translatesAutoresizingMaskIntoConstraints = false
-        ingredientsTitle.topAnchor.constraint(equalTo: categoryLabelContainer.bottomAnchor, constant: 16).isActive = true
+        ingredientsTitle.topAnchor.constraint(equalTo: areaLabelContainer.bottomAnchor, constant: 16).isActive = true
         ingredientsTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
         ingredientsTitle.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
@@ -233,6 +261,34 @@ class DetailViewController: UIViewController {
         return image
     }()
     
+    lazy var areaLabelContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        view.layer.cornerRadius = 8
+        view.layer.masksToBounds = true
+        return view
+    }()
+    
+    lazy var areaLabelImage: UIImageView = {
+        let icon = UIImageView()
+        icon.image = UIImage(systemName: "globe")
+        icon.tintColor = .white
+        icon.frame.size = CGSize(width: 24, height: 24)
+        return icon
+    }()
+    
+    lazy var areaLabel: UILabel = {
+        let label = UILabel()
+        label.text = item?.strArea ?? ""
+        label.font = .systemFont(ofSize: 16)
+        label.textColor = .white
+        label.textAlignment = .left
+        label.backgroundColor = .systemBlue
+        label.layer.cornerRadius = 8
+        label.layer.masksToBounds = true
+        return label
+    }()
+    
     lazy var categoryLabelContainer: UIView = {
         let view = UIView()
         view.backgroundColor = .systemBlue
@@ -241,9 +297,17 @@ class DetailViewController: UIViewController {
         return view
     }()
     
+    lazy var categoryLabelImage: UIImageView = {
+        let icon = UIImageView()
+        icon.image = UIImage(systemName: "shippingbox.fill")
+        icon.tintColor = .white
+        icon.frame.size = CGSize(width: 24, height: 24)
+        return icon
+    }()
+    
     lazy var categoryLabel: UILabel = {
         let label = UILabel()
-        label.text = item?.strArea ?? ""
+        label.text = item?.strCategory ?? ""
         label.font = .systemFont(ofSize: 16)
         label.textColor = .white
         label.textAlignment = .left
