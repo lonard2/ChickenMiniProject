@@ -26,9 +26,21 @@ class MenuItem: UICollectionViewCell {
         }
     }
     
+    lazy var itemContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBackground
+        view.layer.cornerRadius = 16
+        view.layer.masksToBounds = true
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.layer.borderWidth = 1
+        view.layer.borderColor = UIColor.systemGray.cgColor
+        return view
+    }()
+    
     lazy var menuLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 12)
+        label.font = .systemFont(ofSize: 16, weight: .bold)
         label.textColor = .black
         label.textAlignment = .left
         return label
@@ -63,23 +75,32 @@ class MenuItem: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        contentView.addSubview(imageView)
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8).isActive = true
-        imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8).isActive = true
-        imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8).isActive = true
-        imageView.heightAnchor.constraint(equalToConstant: 90).isActive = true
+        // container view
+        contentView.addSubview(itemContainerView)
+        itemContainerView.translatesAutoresizingMaskIntoConstraints = false
+        itemContainerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4).isActive = true
+        itemContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 4).isActive = true
+        itemContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4).isActive = true
+        itemContainerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4).isActive = true
         
-        contentView.addSubview(menuLabel)
+        // content inside container view
+        itemContainerView.addSubview(imageView)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.topAnchor.constraint(equalTo: itemContainerView.topAnchor, constant: 8).isActive = true
+        imageView.leadingAnchor.constraint(equalTo: itemContainerView.leadingAnchor, constant: 8).isActive = true
+        imageView.trailingAnchor.constraint(equalTo: itemContainerView.trailingAnchor, constant: -8).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: 110).isActive = true
+        
+        itemContainerView.addSubview(menuLabel)
         menuLabel.translatesAutoresizingMaskIntoConstraints = false
         
         menuLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8).isActive = true
-        menuLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8).isActive = true
-        menuLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8).isActive = true
+        menuLabel.leadingAnchor.constraint(equalTo: itemContainerView.leadingAnchor, constant: 8).isActive = true
+        menuLabel.trailingAnchor.constraint(equalTo: itemContainerView.trailingAnchor, constant: -8).isActive = true
         
-        let labelPadding: CGFloat = 8
+        let labelPadding: CGFloat = 4
         
-        contentView.addSubview(categoryLabelContainer)
+        itemContainerView.addSubview(categoryLabelContainer)
         categoryLabelContainer.addSubview(categoryLabel)
         categoryLabel.translatesAutoresizingMaskIntoConstraints = false
         categoryLabel.bottomAnchor.constraint(equalTo: categoryLabelContainer.bottomAnchor, constant: -labelPadding).isActive = true
@@ -87,10 +108,10 @@ class MenuItem: UICollectionViewCell {
         categoryLabel.topAnchor.constraint(equalTo: categoryLabelContainer.topAnchor, constant: labelPadding).isActive = true
         
         categoryLabelContainer.translatesAutoresizingMaskIntoConstraints = false
-        categoryLabelContainer.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8).isActive = true
-        categoryLabelContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8).isActive = true
-        categoryLabelContainer.topAnchor.constraint(equalTo: menuLabel.bottomAnchor, constant: 8).isActive = true
-        categoryLabelContainer.widthAnchor.constraint(equalTo: categoryLabel.widthAnchor, constant: 8 * 2).isActive = true
+        categoryLabelContainer.bottomAnchor.constraint(equalTo: itemContainerView.bottomAnchor, constant: -4).isActive = true
+        categoryLabelContainer.leadingAnchor.constraint(equalTo: itemContainerView.leadingAnchor, constant: 4).isActive = true
+        categoryLabelContainer.topAnchor.constraint(equalTo: menuLabel.bottomAnchor, constant: 4).isActive = true
+        categoryLabelContainer.widthAnchor.constraint(equalTo: categoryLabel.widthAnchor, constant: 4 * 2).isActive = true
     }
     
     required init?(coder: NSCoder) {
