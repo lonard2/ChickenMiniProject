@@ -161,7 +161,7 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
         horizontalFilterScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         
         gridContainerView.translatesAutoresizingMaskIntoConstraints = false
-        gridContainerView.topAnchor.constraint(equalTo: horizontalFilterStackView.bottomAnchor, constant: 16).isActive = true
+        gridContainerView.topAnchor.constraint(equalTo: horizontalFilterScrollView.bottomAnchor, constant: 16).isActive = true
         gridContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         gridContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         gridContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16).isActive = true
