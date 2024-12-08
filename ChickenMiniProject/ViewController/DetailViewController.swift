@@ -15,11 +15,24 @@ class DetailViewController: UIViewController {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
     
+    private lazy var ingredientsToggleButton: UIButton = createToggleButton(title: "INGREDIENTS")
+    private lazy var instructionsToggleButton: UIButton = createToggleButton(title: "INSTRUCTIONS")
+    private lazy var ytToggleButton: UIButton = createToggleButton(title: "This recipe is available on YouTube")
+    
+    // state tracking for collapse/expand
+    private var isIngredientsCollapsed: Bool = false
+    private var isInstructionsCollapsed: Bool = false
+    private var isYtToggleCollapsed: Bool = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+        
         setupScrollView()
         loadYtVideo()
+        ingredientsListStackView.isHidden = isIngredientsCollapsed
+        instructionContent.isHidden = isInstructionsCollapsed
+        webView.isHidden = isYtToggleCollapsed
     }
     
     private func setupScrollView() {
@@ -129,6 +142,36 @@ class DetailViewController: UIViewController {
         }
     }
     
+    private func createToggleButton(title: String) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle("\(title) ▼", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
+        button.addTarget(self, action: #selector(toggleSection(_:)), for: .touchUpInside)
+        return button
+    }
+    
+    @objc private func toggleSection(_ sender: UIButton) {
+        switch sender {
+        case ingredientsToggleButton:
+            isIngredientsCollapsed.toggle()
+            ingredientsListStackView.isHidden = isIngredientsCollapsed
+            ingredientsToggleButton.setTitle(isIngredientsCollapsed ? "INGREDIENTS ▶" : "INGREDIENTS ▼", for: .normal)
+            
+        case instructionsToggleButton:
+            isInstructionsCollapsed.toggle()
+            instructionContent.isHidden = isInstructionsCollapsed
+            instructionsToggleButton.setTitle(isInstructionsCollapsed ? "INSTRUCTIONS ▶" : "INSTRUCTIONS ▼", for: .normal)
+            
+        case ytToggleButton:
+            isYtToggleCollapsed.toggle()
+            webView.isHidden = isYtToggleCollapsed
+            ytToggleButton.setTitle(isYtToggleCollapsed ? "This recipe is available on YouTube ▶" : "This recipe is available on YouTube ▼", for: .normal)
+            
+        default:
+            break
+        }
+    }
+    
     private func setupUI() {
         contentView.addSubview(titleBar)
         titleBar.translatesAutoresizingMaskIntoConstraints = false
@@ -187,15 +230,14 @@ class DetailViewController: UIViewController {
         categoryLabelContainer.leadingAnchor.constraint(equalTo: areaLabelContainer.trailingAnchor, constant: 16).isActive = true
         categoryLabelContainer.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 16).isActive = true
         
-        contentView.addSubview(ingredientsTitle)
-        ingredientsTitle.translatesAutoresizingMaskIntoConstraints = false
-        ingredientsTitle.topAnchor.constraint(equalTo: areaLabelContainer.bottomAnchor, constant: 16).isActive = true
-        ingredientsTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
-        ingredientsTitle.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
-        
+        contentView.addSubview(ingredientsToggleButton)
+        ingredientsToggleButton.translatesAutoresizingMaskIntoConstraints = false
+        ingredientsToggleButton.topAnchor.constraint(equalTo: areaLabelContainer.bottomAnchor, constant: 16).isActive = true
+        ingredientsToggleButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+
         contentView.addSubview(ingredientsListStackView)
         ingredientsListStackView.translatesAutoresizingMaskIntoConstraints = false
-        ingredientsListStackView.topAnchor.constraint(equalTo: ingredientsTitle.bottomAnchor, constant: 8).isActive = true
+        ingredientsListStackView.topAnchor.constraint(equalTo: ingredientsToggleButton.bottomAnchor, constant: 8).isActive = true
         ingredientsListStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
         ingredientsListStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
@@ -206,25 +248,23 @@ class DetailViewController: UIViewController {
             }
         }
         
-        contentView.addSubview(instructionTitle)
-        instructionTitle.translatesAutoresizingMaskIntoConstraints = false
-        instructionTitle.topAnchor.constraint(equalTo: ingredientsListStackView.bottomAnchor, constant: 8).isActive = true
-        instructionTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
-        instructionTitle.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
-        
+        contentView.addSubview(instructionsToggleButton)
+        instructionsToggleButton.translatesAutoresizingMaskIntoConstraints = false
+        instructionsToggleButton.topAnchor.constraint(equalTo: ingredientsListStackView.bottomAnchor, constant: 8).isActive = true
+        instructionsToggleButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+
         contentView.addSubview(instructionContent)
         instructionContent.translatesAutoresizingMaskIntoConstraints = false
-        instructionContent.topAnchor.constraint(equalTo: instructionTitle.bottomAnchor, constant: 8).isActive = true
+        instructionContent.topAnchor.constraint(equalTo: instructionsToggleButton.bottomAnchor, constant: 8).isActive = true
         instructionContent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
         instructionContent.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
-        contentView.addSubview(ytTitle)
-        ytTitle.translatesAutoresizingMaskIntoConstraints = false
-        ytTitle.topAnchor.constraint(equalTo: instructionContent.bottomAnchor, constant: 8).isActive = true
-        ytTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
-        ytTitle.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
-        
-        webView.topAnchor.constraint(equalTo: ytTitle.bottomAnchor, constant: 16).isActive = true
+        contentView.addSubview(ytToggleButton)
+        ytToggleButton.translatesAutoresizingMaskIntoConstraints = false
+        ytToggleButton.topAnchor.constraint(equalTo: instructionContent.bottomAnchor, constant: 8).isActive = true
+        ytToggleButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+      
+        webView.topAnchor.constraint(equalTo: ytToggleButton.bottomAnchor, constant: 16).isActive = true
         webView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
         webView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         webView.heightAnchor.constraint(equalToConstant: 300).isActive = true
@@ -317,15 +357,6 @@ class DetailViewController: UIViewController {
         return label
     }()
     
-    lazy var ingredientsTitle: UILabel = {
-        let label = UILabel()
-        label.text = "INGREDIENTS"
-        label.font = .systemFont(ofSize: 18, weight: .bold)
-        label.textColor = .label
-        
-        return label
-    }()
-    
     lazy var ingredientsListStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -336,15 +367,6 @@ class DetailViewController: UIViewController {
         return stackView
     }()
     
-    lazy var instructionTitle: UILabel = {
-        let label = UILabel()
-        label.text = "INSTRUCTIONS"
-        label.font = .systemFont(ofSize: 18, weight: .bold)
-        label.textColor = .label
-        
-        return label
-    }()
-    
     lazy var instructionContent: UILabel = {
         let label = UILabel()
         label.text = item?.strInstructions
@@ -352,15 +374,6 @@ class DetailViewController: UIViewController {
         label.textAlignment = .justified
         label.textColor = .label
         label.numberOfLines = 0
-        
-        return label
-    }()
-    
-    lazy var ytTitle: UILabel = {
-        let label = UILabel()
-        label.text = "This recipe is available on YouTube"
-        label.font = .systemFont(ofSize: 18, weight: .bold)
-        label.textColor = .label
         
         return label
     }()
