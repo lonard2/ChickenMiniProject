@@ -18,40 +18,47 @@ struct Meal: Codable {
     let strIngredients: [String]
     let strMeasures: [String]
     
-    enum CodingsKeys: String, CodingKey {
-        case idMeal
-        case strMeal
-        case strCategory
-        case strArea
-        case strInstructions
-        case strMealThumb
-        case strYoutube
-        case strIngredients
-        case strMeasures
+    struct DynamicCodingsKeys: CodingKey {
+        var stringValue: String
+        var intValue: Int? { nil }
+        
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+        }
+        
+        init?(intValue: Int) {
+            return nil
+        }
+        
+        // safer initializer with fallback
+        static func makeKey(stringValue: String) -> DynamicCodingsKeys {
+            return DynamicCodingsKeys(stringValue: stringValue) ?? DynamicCodingsKeys(stringValue: "unknown value")!
+        }
     }
     
     // decode the API - in form of JSON via decoder
     init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingsKeys.self)
-        idMeal = try container.decode(String.self, forKey: .idMeal)
-        strMeal = try container.decode(String.self, forKey: .strMeal)
-        strCategory = try container.decode(String.self, forKey: .strCategory)
-        strArea = try container.decode(String.self, forKey: .strArea)
-        strInstructions = try container.decode(String.self, forKey: .strInstructions)
-        strMealThumb = try container.decode(String.self, forKey: .strMealThumb)
-        strYoutube = try container.decode(String.self, forKey: .strYoutube)
+        let container = try decoder.container(keyedBy: DynamicCodingsKeys.self)
+        idMeal = try container.decode(String.self, forKey: .makeKey(stringValue: "idMeal"))
+        strMeal = try container.decode(String.self, forKey: .makeKey(stringValue: "strMeal"))
+        strCategory = try container.decode(String.self, forKey: .makeKey(stringValue: "strCategory"))
+        strArea = try container.decode(String.self, forKey: .makeKey(stringValue: "strArea"))
+        strInstructions = try container.decode(String.self, forKey: .makeKey(stringValue: "strInstructions"))
+        strMealThumb = try container.decode(String.self, forKey: .makeKey(stringValue: "strMealThumb"))
+        strYoutube = try container.decode(String.self, forKey: .makeKey(stringValue: "strYoutube"))
         
-        let rawAPIJSON = try JSONSerialization.jsonObject(with: decoder.singleValueContainer().decode(Data.self)) as! [String: Any]
-        var ingredients = [String]()
-        var measures = [String]()
+        var ingredients: [String] = []
+        var measures: [String] = []
         
-        for key in rawAPIJSON.keys {
-            if key.hasPrefix("strIngredient"), let value = rawAPIJSON[key] as? String, !value.isEmpty {
-                ingredients.append(value)
+        for index in 1...20 {
+            if let ingredientKey = DynamicCodingsKeys(stringValue: "strIngredient\(index)"),
+               let ingredient = try? container.decodeIfPresent(String.self, forKey: ingredientKey) {
+                !ingredient.isEmpty ? ingredients.append(ingredient) : ()
             }
             
-            if key.hasPrefix("strMeasure"), let value = rawAPIJSON[key] as? String, !value.isEmpty {
-                measures.append(value)
+            if let measureKey = DynamicCodingsKeys(stringValue: "strMeasure\(index)"),
+               let measure = try? container.decodeIfPresent(String.self, forKey: measureKey) {
+                !measure.isEmpty ? measures.append(measure) : ()
             }
         }
         
@@ -61,6 +68,5 @@ struct Meal: Codable {
 }
 
 struct MealsResponse: Codable {
-    let meals: [Meal]
+    let meals: [Meal]?
 }
-
