@@ -12,7 +12,7 @@ class MenuItem: UICollectionViewCell {
         didSet {
             guard let menuItem else { return }
             menuLabel.text = menuItem.strMeal
-            categoryLabel.text = menuItem.strCategory
+            categoryLabel.text = menuItem.strArea
             if let imageUrl = URL(string: menuItem.strMealThumb) {
                 URLSession.shared.dataTask(with: imageUrl) { data, _, _ in
                     guard let data else { return }
@@ -41,7 +41,9 @@ class MenuItem: UICollectionViewCell {
     lazy var menuLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .bold)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
+        }
         label.textAlignment = .left
         return label
     }()
@@ -89,7 +91,7 @@ class MenuItem: UICollectionViewCell {
         imageView.topAnchor.constraint(equalTo: itemContainerView.topAnchor, constant: 8).isActive = true
         imageView.leadingAnchor.constraint(equalTo: itemContainerView.leadingAnchor, constant: 8).isActive = true
         imageView.trailingAnchor.constraint(equalTo: itemContainerView.trailingAnchor, constant: -8).isActive = true
-        imageView.heightAnchor.constraint(equalToConstant: 110).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: 100).isActive = true
         
         itemContainerView.addSubview(menuLabel)
         menuLabel.translatesAutoresizingMaskIntoConstraints = false
