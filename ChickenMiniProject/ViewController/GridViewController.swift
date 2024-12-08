@@ -15,7 +15,7 @@ protocol GridViewControllerDelegate: AnyObject {
 // reusable grid component (UI)
 class GridViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
-    private var collectionView: UICollectionView!
+    var collectionView: UICollectionView!
     var meals: [Meal] = []
     var allMeals: [Meal] = []
     weak var delegate: GridViewControllerDelegate?
@@ -115,11 +115,6 @@ class GridViewController: UIViewController, UICollectionViewDataSource, UICollec
                     UIView.animate(withDuration: 1.0) {
                         self.collectionView.alpha = 1
                     }
-                    
-//                    // navigate to GridViewController after fetching meals
-//                    let gridVC = GridViewController()
-//                    gridVC.meals = meals
-//                    self.navigationController?.pushViewController(gridVC, animated: true)
 //                    
                 case .failure(let error):
                     print("Error fetching meals: \(error.localizedDescription)")
