@@ -13,7 +13,16 @@ class MenuItem: UICollectionViewCell {
             guard let menuItem else { return }
             menuLabel.text = menuItem.strMeal
             categoryLabel.text = menuItem.strCategory
-
+            if let imageUrl = URL(string: menuItem.strMealThumb) {
+                URLSession.shared.dataTask(with: imageUrl) { data, _, _ in
+                    guard let data else { return }
+                    DispatchQueue.main.async {
+                        self.imageView.image = UIImage(data: data)
+                    }
+                }.resume()
+            } else {
+                self.imageView.image = UIImage(systemName: "exclamationmark.circle")
+            }
         }
     }
     
@@ -21,24 +30,25 @@ class MenuItem: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16)
         label.textColor = .black
-        label.textAlignment = .center
+        label.textAlignment = .left
         return label
     }()
     
     lazy var imageView: UIImageView = {
         let image = UIImageView()
-        if let imageUrl = URL(string: menuItem?.strMealThumb ?? "") {
-            URLSession.shared.dataTask(with: imageUrl) { data, _, _ in
-                guard let data else { return }
-                DispatchQueue.main.async {
-                    image.image = UIImage(data: data)
-                }
-            }.resume()
-        } else {
-            image.image = UIImage(systemName: "exclamationmark.circle")
-        }
+        image.contentMode = .scaleAspectFill
+        image.clipsToBounds = true
+        image.translatesAutoresizingMaskIntoConstraints = false
         
         return image
+    }()
+    
+    lazy var categoryLabelContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        view.layer.cornerRadius = 8
+        view.layer.masksToBounds = true
+        return view
     }()
     
     lazy var categoryLabel: UILabel = {
@@ -46,38 +56,40 @@ class MenuItem: UICollectionViewCell {
         label.font = .systemFont(ofSize: 16)
         label.textColor = .white
         label.textAlignment = .left
-        label.backgroundColor = .systemBlue
-        label.layer.cornerRadius = 8
-        label.layer.masksToBounds = true
-        
         return label
     }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        contentView.addSubview(menuLabel)
-        menuLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        menuLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16).isActive = true
-        menuLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
-        menuLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
         contentView.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.topAnchor.constraint(equalTo: menuLabel.bottomAnchor, constant: 8).isActive = true
+        imageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16).isActive = true
         imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
         imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         imageView.heightAnchor.constraint(equalToConstant: 150).isActive = true
         
-        contentView.addSubview(categoryLabel)
+        contentView.addSubview(menuLabel)
+        menuLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        menuLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 16).isActive = true
+        menuLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        menuLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
+        
+        let labelPadding: CGFloat = 8
+        
+        contentView.addSubview(categoryLabelContainer)
+        categoryLabelContainer.addSubview(categoryLabel)
         categoryLabel.translatesAutoresizingMaskIntoConstraints = false
-        categoryLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16).isActive = true
-        categoryLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
-        categoryLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
-        categoryLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8).isActive = true
+        categoryLabel.bottomAnchor.constraint(equalTo: categoryLabelContainer.bottomAnchor, constant: -labelPadding).isActive = true
+        categoryLabel.leadingAnchor.constraint(equalTo: categoryLabelContainer.leadingAnchor, constant: labelPadding).isActive = true
+        categoryLabel.topAnchor.constraint(equalTo: categoryLabelContainer.topAnchor, constant: -labelPadding).isActive = true
         
-        
-        
+        categoryLabelContainer.translatesAutoresizingMaskIntoConstraints = false
+        categoryLabelContainer.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16).isActive = true
+        categoryLabelContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        categoryLabelContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
+        categoryLabelContainer.topAnchor.constraint(equalTo: menuLabel.bottomAnchor, constant: 16).isActive = true
     }
     
     required init?(coder: NSCoder) {
