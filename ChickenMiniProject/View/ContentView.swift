@@ -13,6 +13,8 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
     var meals: [Meal] = []
     // store filter/area categories
     var filterCategories: [String] = []
+    // store selected filters
+    private var selectedFilters: Set<String> = [] // set is unique and efficient on operations
     
     private var gridViewController: GridViewController!
     
@@ -38,6 +40,8 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
         searchBar.layer.borderWidth = 1
         searchBar.layer.borderColor = UIColor.systemGray.cgColor
         searchBar.layer.masksToBounds = false
+        
+        searchBar.showsCancelButton = true
         
         searchBar.delegate = self
         
@@ -83,14 +87,17 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
     }
     
     private func setupFilterButtons(with categories: [String]) {
+        print("Setting up filter buttons with categories: \(categories)")
         horizontalFilterStackView.arrangedSubviews.forEach { $0.removeFromSuperview() } // clear existing buttons
         
         for area in categories {
             let button = PaddedButton(type: .system)
             button.setTitle(area, for: .normal)
             button.setTitleColor(.white, for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-            button.backgroundColor = .systemBlue
+            button.titleLabel?.font = selectedFilters.contains(area) ? UIFont.systemFont(ofSize: 14, weight: .regular) : UIFont.systemFont(ofSize: 14, weight: .bold)
+            button.backgroundColor = selectedFilters.contains(area) ? .systemGreen : .systemBlue
+            button.layer.borderWidth = 1
+            button.layer.borderColor = selectedFilters.contains(area) ? UIColor.systemGreen.cgColor : UIColor.systemBlue.cgColor
             button.layer.cornerRadius = 8
             
             button.titlePadding = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
@@ -98,19 +105,54 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
             button.addTarget(self, action: #selector(filterButtonTapped(_:)), for: .touchUpInside)
             
             button.translatesAutoresizingMaskIntoConstraints = false // Important for stack view handling
-            // Add height constraint
             button.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            
+            print("Adding button for: \(area), Selected: \(selectedFilters.contains(area))")
             
             horizontalFilterStackView.addArrangedSubview(button)
         }
+        
+        print("Buttons updated. Total buttons: \(horizontalFilterStackView.arrangedSubviews.count)")
     }
     
     @objc func filterButtonTapped(_ sender: UIButton) {
-        if let title = sender.title(for: .normal) {
-            filterMeals(by: title)
+        guard let filter = sender.title(for: .normal) else { return }
+        
+        // Update selected filters
+        if selectedFilters.contains(filter) {
+            selectedFilters.remove(filter) // deselect filter
+            print("Removed filter: \(filter)")
         } else {
-            resetFilter()
+            selectedFilters.insert(filter) // select filter
+            print("Added filter: \(filter)")
         }
+
+        // Log current selected filters
+        print("Current selected filters: \(selectedFilters)")
+
+        // Set up buttons again with the latest selected filters
+        setupFilterButtons(with: filterCategories)
+        
+        applyFilters()
+    }
+    
+    private func applyFilters() {
+        guard !selectedFilters.isEmpty else {
+            resetFilter()
+            return
+        }
+        
+        print("Applying filters: \(selectedFilters)")
+        
+        let filteredMeals = meals.filter { meal in
+            return selectedFilters.contains(meal.strArea)
+        }
+        
+        gridViewController.meals = filteredMeals
+        gridViewController.reloadCollectionView()
+        
+        // Ensure that buttons are set up with the full categories to maintain their states
+        setupFilterButtons(with: filterCategories)
     }
     
     private func setupDismissKeyboardGesture() {
@@ -201,6 +243,55 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
         fetchMealsAndSetupFilters()
         setupDismissKeyboardGesture()
     }
+}
+
+extension ContentView {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        guard let query = searchBar.text, !query.isEmpty else {
+            resetFilter()
+            return
+        }
+        
+        // fetch meals data based on the query
+        APIHelper.shared.fetchMeals(query: query) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let meals):
+                    self?.gridViewController.meals = meals
+                    self?.gridViewController.reloadCollectionView()
+                case .failure(let error):
+                    print("Search failed: \(error.localizedDescription)")
+                }
+            }
+        }
+        
+        // dismiss keyboard after search
+        searchBar.resignFirstResponder()
+    }
     
+    // real time search
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        guard !searchText.isEmpty else {
+            resetFilter()
+            return
+        }
+        
+        APIHelper.shared.fetchMeals(query: searchText) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let meals):
+                    self?.gridViewController.meals = meals
+                    self?.gridViewController.reloadCollectionView()
+                case .failure(let error):
+                    print("Search failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
     
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        // reset the data after search cancelled
+        resetFilter()
+        searchBar.resignFirstResponder()
+    }
 }
