@@ -12,21 +12,60 @@ class DetailViewController: UIViewController {
     
     var item: Meal?
     private var webView: WKWebView!
+    private let scrollView = UIScrollView()
+    private let contentView = UIView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        setupUI()
+        setupScrollView()
         loadYtVideo()
     }
     
-    private func setupWebView() {
+    private func setupScrollView() {
+        view.addSubview(scrollView)
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        scrollView.addSubview(contentView)
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.topAnchor.constraint(equalTo: scrollView.topAnchor).isActive = true
+        contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
+        contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
+        contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
+        // Set contentView's width equal to the scrollView's width
+        contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
+        
         webView = WKWebView()
-        view.addSubview(webView)
+        contentView.addSubview(webView)
         webView.translatesAutoresizingMaskIntoConstraints = false
-        webView.topAnchor.constraint(equalTo: ytTitle.bottomAnchor).isActive = true
-        webView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        webView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        webView.layer.cornerRadius = 16
+        
+        setupUI() // Moved here so all views are initialized first
+        setupLinkLabel() // Call after webView is initialized
+
+    }
+    
+    private func setupLinkLabel() {
+        guard webView != nil else {
+            fatalError("webView is nil. Ensure setupWebView() is called before setupLinkLabel().")
+        }
+        contentView.addSubview(linkLabel)
+        
+        linkLabel.numberOfLines = 2
+
+        linkLabel.translatesAutoresizingMaskIntoConstraints = false
+        linkLabel.topAnchor.constraint(equalTo: webView.bottomAnchor, constant: 16).isActive = true
+        linkLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        linkLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
+        linkLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16).isActive = true
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(linkTapped))
+        linkLabel.isUserInteractionEnabled = true
+        linkLabel.addGestureRecognizer(tapGesture)
     }
     
     private func loadYtVideo() {
@@ -65,70 +104,102 @@ class DetailViewController: UIViewController {
         UIApplication.shared.open(url)
     }
     
+    private func createCheckboxButton(title: String, tag: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "square"), for: .normal)
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.systemBlue, for: .normal)
+        button.contentHorizontalAlignment = .left
+        button.tag = tag
+        button.addTarget(self, action: #selector(checkboxTapped), for: .touchUpInside)
+        return button
+    }
+    
+    @objc private func checkboxTapped(_ sender: UIButton) {
+        let selectedIngredient = item?.strIngredients[sender.tag] ?? "Unknown ingredient"
+        
+        if sender.currentImage == UIImage(systemName: "square") {
+            // change to checked state
+            sender.setImage(UIImage(systemName: "checkmark.square.fill"), for: .normal)
+        } else {
+            // change to unchecked state
+            sender.setImage(UIImage(systemName: "square"), for: .normal)
+        }
+    }
+    
     private func setupUI() {
-        view.addSubview(titleBar)
+        contentView.addSubview(titleBar)
         titleBar.translatesAutoresizingMaskIntoConstraints = false
-        titleBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
-        titleBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        titleBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        titleBar.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
+        titleBar.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        titleBar.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
         
         if let item = item {
             titleBar.text = item.strMeal
         }
         
-        view.addSubview(imageView)
+        contentView.addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.topAnchor.constraint(equalTo: titleBar.bottomAnchor).isActive = true
-        imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        imageView.topAnchor.constraint(equalTo: titleBar.bottomAnchor, constant: 16).isActive = true
+        imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: 300).isActive = true
         
-        view.addSubview(categoryLabel)
+        let labelPadding: CGFloat = 16
+        
+        contentView.addSubview(categoryLabelContainer)
+        categoryLabelContainer.addSubview(categoryLabel)
         categoryLabel.translatesAutoresizingMaskIntoConstraints = false
-        categoryLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor).isActive = true
-        categoryLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        categoryLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        categoryLabel.bottomAnchor.constraint(equalTo: categoryLabelContainer.bottomAnchor, constant: -labelPadding).isActive = true
+        categoryLabel.leadingAnchor.constraint(equalTo: categoryLabelContainer.leadingAnchor, constant: labelPadding).isActive = true
+        categoryLabel.trailingAnchor.constraint(equalTo: categoryLabelContainer.trailingAnchor, constant: -labelPadding).isActive = true
+        categoryLabel.topAnchor.constraint(equalTo: categoryLabelContainer.topAnchor, constant: labelPadding).isActive = true
         
-        view.addSubview(ingredientsTitle)
+        categoryLabelContainer.translatesAutoresizingMaskIntoConstraints = false
+        categoryLabelContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        categoryLabelContainer.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 16).isActive = true
+        
+        contentView.addSubview(ingredientsTitle)
         ingredientsTitle.translatesAutoresizingMaskIntoConstraints = false
-        ingredientsTitle.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16).isActive = true
-        ingredientsTitle.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        ingredientsTitle.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        ingredientsTitle.topAnchor.constraint(equalTo: categoryLabelContainer.bottomAnchor, constant: 16).isActive = true
+        ingredientsTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        ingredientsTitle.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
-        view.addSubview(ingredientsListStackView)
+        contentView.addSubview(ingredientsListStackView)
         ingredientsListStackView.translatesAutoresizingMaskIntoConstraints = false
         ingredientsListStackView.topAnchor.constraint(equalTo: ingredientsTitle.bottomAnchor, constant: 8).isActive = true
-        ingredientsListStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        ingredientsListStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        ingredientsListStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        ingredientsListStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
         if let ingredients = item?.strIngredients {
-            for ingredient in ingredients {
-                let ingredientLabel = UILabel()
-                ingredientLabel.text = ingredient
-                ingredientLabel.font = .systemFont(ofSize: 16)
-                ingredientLabel.textColor = .secondaryLabel
-                ingredientsListStackView.addArrangedSubview(ingredientLabel)
+            for (index, ingredient) in ingredients.enumerated() {
+                let checkboxButton = createCheckboxButton(title: ingredient, tag: index)
+                ingredientsListStackView.addArrangedSubview(checkboxButton)
             }
         }
         
-        view.addSubview(instructionTitle)
+        contentView.addSubview(instructionTitle)
         instructionTitle.translatesAutoresizingMaskIntoConstraints = false
         instructionTitle.topAnchor.constraint(equalTo: ingredientsListStackView.bottomAnchor, constant: 8).isActive = true
-        instructionTitle.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        instructionTitle.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        instructionTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        instructionTitle.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
-        
-        view.addSubview(instructionContent)
+        contentView.addSubview(instructionContent)
         instructionContent.translatesAutoresizingMaskIntoConstraints = false
         instructionContent.topAnchor.constraint(equalTo: instructionTitle.bottomAnchor, constant: 8).isActive = true
-        instructionContent.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        instructionContent.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        instructionContent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        instructionContent.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
-        view.addSubview(ytTitle)
+        contentView.addSubview(ytTitle)
         ytTitle.translatesAutoresizingMaskIntoConstraints = false
         ytTitle.topAnchor.constraint(equalTo: instructionContent.bottomAnchor, constant: 8).isActive = true
-        ytTitle.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        ytTitle.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        ytTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        ytTitle.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
         
+        webView.topAnchor.constraint(equalTo: ytTitle.bottomAnchor, constant: 16).isActive = true
+        webView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16).isActive = true
+        webView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16).isActive = true
+        webView.heightAnchor.constraint(equalToConstant: 300).isActive = true
         
     }
     
@@ -143,6 +214,11 @@ class DetailViewController: UIViewController {
     
     lazy var imageView: UIImageView = {
         let image = UIImageView()
+        image.contentMode = .scaleAspectFill
+        image.clipsToBounds = true
+        image.layer.cornerRadius = 16
+        image.translatesAutoresizingMaskIntoConstraints = false
+        
         if let imageUrl = URL(string: item?.strMealThumb ?? "") {
             URLSession.shared.dataTask(with: imageUrl) { data, _, _ in
                 guard let data else { return }
@@ -157,15 +233,23 @@ class DetailViewController: UIViewController {
         return image
     }()
     
+    lazy var categoryLabelContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        view.layer.cornerRadius = 8
+        view.layer.masksToBounds = true
+        return view
+    }()
+    
     lazy var categoryLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 24)
+        label.text = item?.strArea ?? ""
+        label.font = .systemFont(ofSize: 16)
         label.textColor = .white
-        label.textAlignment = .center
+        label.textAlignment = .left
         label.backgroundColor = .systemBlue
         label.layer.cornerRadius = 8
         label.layer.masksToBounds = true
-        
         return label
     }()
     
@@ -199,7 +283,8 @@ class DetailViewController: UIViewController {
     
     lazy var instructionContent: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.text = item?.strInstructions
+        label.font = .systemFont(ofSize: 12)
         label.textColor = .label
         label.numberOfLines = 0
         
