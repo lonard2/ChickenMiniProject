@@ -284,7 +284,8 @@ class DetailViewController: UIViewController {
     lazy var instructionContent: UILabel = {
         let label = UILabel()
         label.text = item?.strInstructions
-        label.font = .systemFont(ofSize: 12)
+        label.font = .systemFont(ofSize: 16)
+        label.textAlignment = .justified
         label.textColor = .label
         label.numberOfLines = 0
         
