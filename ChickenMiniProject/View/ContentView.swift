@@ -33,6 +33,12 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
         searchBar.searchTextField.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         searchBar.setImage(UIImage(systemName: "magnifyingglass"), for: .search, state: .normal)
         
+        // border & stroke
+        searchBar.layer.cornerRadius = 16
+        searchBar.layer.borderWidth = 1
+        searchBar.layer.borderColor = UIColor.systemGray.cgColor
+        searchBar.layer.masksToBounds = false
+        
         searchBar.delegate = self
         
         return searchBar
@@ -43,14 +49,15 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
         scrollView.addSubview(horizontalFilterStackView)
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
+    
         return scrollView
     }()
     
     let horizontalFilterStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.spacing = 16
-        stackView.distribution = .fillEqually
+        stackView.spacing = 24
+        stackView.distribution = .fill
         return stackView
     }()
     
@@ -79,14 +86,20 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
         horizontalFilterStackView.arrangedSubviews.forEach { $0.removeFromSuperview() } // clear existing buttons
         
         for area in categories {
-            let button = UIButton(type: .system)
+            let button = PaddedButton(type: .system)
             button.setTitle(area, for: .normal)
-            button.setTitleColor(.label, for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-            button.backgroundColor = .systemBackground
+            button.setTitleColor(.white, for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+            button.backgroundColor = .systemBlue
             button.layer.cornerRadius = 8
             
+            button.titlePadding = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+            
             button.addTarget(self, action: #selector(filterButtonTapped(_:)), for: .touchUpInside)
+            
+            button.translatesAutoresizingMaskIntoConstraints = false // Important for stack view handling
+            // Add height constraint
+            button.heightAnchor.constraint(equalToConstant: 40).isActive = true
             
             horizontalFilterStackView.addArrangedSubview(button)
         }
@@ -146,25 +159,38 @@ class ContentView: UIViewController, GridViewControllerDelegate, UISearchBarDele
         view.addSubview(horizontalFilterScrollView)
         view.addSubview(gridContainerView)
         titleBar.translatesAutoresizingMaskIntoConstraints = false
-        titleBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16).isActive = true
+        titleBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
         titleBar.bottomAnchor.constraint(equalTo: searchBarView.topAnchor, constant: -16).isActive = true
         titleBar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true
         titleBar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16).isActive = true
         
         searchBarView.translatesAutoresizingMaskIntoConstraints = false
-        searchBarView.topAnchor.constraint(equalTo: titleBar.bottomAnchor, constant: 16).isActive = true
-        searchBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        searchBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor , constant: -16).isActive = true
+        searchBarView.topAnchor.constraint(equalTo: titleBar.bottomAnchor, constant: 8).isActive = true
+        searchBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8).isActive = true
+        searchBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor , constant: -8).isActive = true
     
         horizontalFilterScrollView.translatesAutoresizingMaskIntoConstraints = false
-        horizontalFilterScrollView.topAnchor.constraint(equalTo: searchBarView.bottomAnchor, constant: 16).isActive = true
-        horizontalFilterScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        horizontalFilterScrollView.topAnchor.constraint(equalTo: searchBarView.bottomAnchor, constant: 8).isActive = true
+        horizontalFilterScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8).isActive = true
+        horizontalFilterScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        horizontalFilterScrollView.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        
+        horizontalFilterStackView.translatesAutoresizingMaskIntoConstraints = false
+        horizontalFilterStackView.leadingAnchor.constraint(equalTo: horizontalFilterScrollView.leadingAnchor).isActive = true
+        horizontalFilterStackView.trailingAnchor.constraint(equalTo: horizontalFilterScrollView.trailingAnchor).isActive = true
+        horizontalFilterStackView.topAnchor.constraint(equalTo: horizontalFilterScrollView.topAnchor).isActive = true
+        horizontalFilterStackView.bottomAnchor.constraint(equalTo: horizontalFilterScrollView.bottomAnchor).isActive = true
         
         gridContainerView.translatesAutoresizingMaskIntoConstraints = false
-        gridContainerView.topAnchor.constraint(equalTo: horizontalFilterScrollView.bottomAnchor, constant: 16).isActive = true
-        gridContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        gridContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        gridContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16).isActive = true
+        gridContainerView.topAnchor.constraint(equalTo: horizontalFilterScrollView.bottomAnchor).isActive = true
+        gridContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        gridContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        gridContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        horizontalFilterScrollView.contentSize = CGSize(width: horizontalFilterStackView.frame.width, height: horizontalFilterStackView.frame.height)
     }
     
     override func viewDidLoad() {
