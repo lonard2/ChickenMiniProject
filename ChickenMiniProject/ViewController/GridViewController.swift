@@ -31,7 +31,7 @@ class GridViewController: UIViewController, UICollectionViewDataSource, UICollec
         super.viewWillLayoutSubviews()
         if let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             let numberOfItemsPerRow: CGFloat = 2
-            let padding: CGFloat = 16 * 3 // left + right + Inter-item spacing
+            let padding: CGFloat = 16 * 2 // left + right + Inter-item spacing
             let availableWidth = view.bounds.width - padding
             let itemWidth = availableWidth / numberOfItemsPerRow
             layout.itemSize = CGSize(width: itemWidth, height: view.bounds.height * 0.3)
@@ -42,9 +42,9 @@ class GridViewController: UIViewController, UICollectionViewDataSource, UICollec
         let layout = UICollectionViewFlowLayout()
         // layout (grid) size moved to viewWillLayoutSubviews
         
-        layout.minimumLineSpacing = 16
+        layout.minimumLineSpacing = 8
         layout.minimumInteritemSpacing = 8
-        layout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        layout.sectionInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.dataSource = self
@@ -61,6 +61,9 @@ class GridViewController: UIViewController, UICollectionViewDataSource, UICollec
         let trailingConstraint = collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
         
         NSLayoutConstraint.activate([topConstraint, bottomConstraint, leadingConstraint, trailingConstraint])
+    
+        // initial alpha to 0 (at first) - fade-in
+        collectionView.alpha = 0
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -108,6 +111,10 @@ class GridViewController: UIViewController, UICollectionViewDataSource, UICollec
                     self.allMeals = meals
                     self.meals = meals
                     self.collectionView.reloadData()
+                    
+                    UIView.animate(withDuration: 1.0) {
+                        self.collectionView.alpha = 1
+                    }
                     
 //                    // navigate to GridViewController after fetching meals
 //                    let gridVC = GridViewController()
