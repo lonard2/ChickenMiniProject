@@ -55,11 +55,7 @@ class APIHelper {
                     let areas = Set(meals.compactMap { $0.strArea })
                     self.filterCategories = Array(areas).sorted()
                     
-                    print("Filter Categories: \(self.filterCategories)")
-                    
                     completion(.success(meals))
-                    
-                    print("Fetched meals: \(meals)")
                 }
             } catch {
                 completion(.failure(error))
