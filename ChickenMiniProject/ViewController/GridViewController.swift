@@ -13,7 +13,7 @@ protocol GridViewControllerDelegate: AnyObject {
 }
 
 // reusable grid component (UI)
-class GridViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+final class GridViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     var collectionView: UICollectionView!
     var meals: [Meal] = []

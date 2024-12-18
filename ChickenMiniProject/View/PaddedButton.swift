@@ -7,7 +7,7 @@
 
 import UIKit
 
-class PaddedButton: UIButton {
+final class PaddedButton: UIButton {
     var titlePadding: UIEdgeInsets = .zero
     
     override func layoutSubviews() {

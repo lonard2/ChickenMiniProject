@@ -7,7 +7,7 @@
 
 import UIKit
 
-class MenuItem: UICollectionViewCell {
+final class MenuItem: UICollectionViewCell {
     var menuItem: Meal? {
         didSet {
             guard let menuItem else { return }

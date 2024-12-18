@@ -8,21 +8,7 @@
 import UIKit
 import WebKit
 
-class DetailViewController: UIViewController {
-    
-    var item: Meal?
-    private var webView: WKWebView!
-    private let scrollView = UIScrollView()
-    private let contentView = UIView()
-    
-    private lazy var ingredientsToggleButton: UIButton = createToggleButton(title: "INGREDIENTS")
-    private lazy var instructionsToggleButton: UIButton = createToggleButton(title: "INSTRUCTIONS")
-    private lazy var ytToggleButton: UIButton = createToggleButton(title: "This recipe is available on YouTube")
-    
-    // state tracking for collapse/expand
-    private var isIngredientsCollapsed: Bool = false
-    private var isInstructionsCollapsed: Bool = false
-    private var isYtToggleCollapsed: Bool = false
+final class DetailViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,6 +20,145 @@ class DetailViewController: UIViewController {
         instructionContent.isHidden = isInstructionsCollapsed
         webView.isHidden = isYtToggleCollapsed
     }
+    
+    var item: Meal?
+    private var webView: WKWebView!
+    private let scrollView = UIScrollView()
+    private let contentView = UIView()
+    
+    private lazy var ingredientsToggleButton: UIButton = createToggleButton(title: "INGREDIENTS")
+    private lazy var instructionsToggleButton: UIButton = createToggleButton(title: "INSTRUCTIONS")
+    private lazy var ytToggleButton: UIButton = createToggleButton(title: "This recipe is available on YouTube")
+    
+    // state tracking for collapse/expand
+    private lazy var isIngredientsCollapsed: Bool = false
+    private lazy var isInstructionsCollapsed: Bool = false
+    private lazy var isYtToggleCollapsed: Bool = false
+    
+    lazy var titleBar: UILabel = {
+        let label = UILabel()
+        label.text = "Loading..." // placeholder with a loading info until the data is successfully received
+        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        label.textColor = .label
+        label.textAlignment = .center
+        return label
+    }()
+    
+    lazy var imageView: UIImageView = {
+        let image = UIImageView()
+        image.contentMode = .scaleAspectFill
+        image.clipsToBounds = true
+        image.layer.cornerRadius = 16
+        image.translatesAutoresizingMaskIntoConstraints = false
+        
+        if let imageUrl = URL(string: item?.strMealThumb ?? "") {
+            URLSession.shared.dataTask(with: imageUrl) { data, _, _ in
+                guard let data else { return }
+                DispatchQueue.main.async {
+                    image.image = UIImage(data: data)
+                }
+            }.resume()
+        } else {
+            image.image = UIImage(systemName: "exclamationmark.circle")
+        }
+        
+        return image
+    }()
+    
+    lazy var areaLabelContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        view.layer.cornerRadius = 8
+        view.layer.masksToBounds = true
+        return view
+    }()
+    
+    lazy var areaLabelImage: UIImageView = {
+        let icon = UIImageView()
+        icon.image = UIImage(systemName: "globe")
+        icon.tintColor = .white
+        icon.frame.size = CGSize(width: 24, height: 24)
+        return icon
+    }()
+    
+    lazy var areaLabel: UILabel = {
+        let label = UILabel()
+        label.text = item?.strArea ?? ""
+        label.font = .systemFont(ofSize: 16)
+        label.textColor = .white
+        label.textAlignment = .left
+        label.backgroundColor = .systemBlue
+        label.layer.cornerRadius = 8
+        label.layer.masksToBounds = true
+        return label
+    }()
+    
+    lazy var categoryLabelContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBlue
+        view.layer.cornerRadius = 8
+        view.layer.masksToBounds = true
+        return view
+    }()
+    
+    lazy var categoryLabelImage: UIImageView = {
+        let icon = UIImageView()
+        icon.image = UIImage(systemName: "shippingbox.fill")
+        icon.tintColor = .white
+        icon.frame.size = CGSize(width: 24, height: 24)
+        return icon
+    }()
+    
+    lazy var categoryLabel: UILabel = {
+        let label = UILabel()
+        label.text = item?.strCategory ?? ""
+        label.font = .systemFont(ofSize: 16)
+        label.textColor = .white
+        label.textAlignment = .left
+        label.backgroundColor = .systemBlue
+        label.layer.cornerRadius = 8
+        label.layer.masksToBounds = true
+        return label
+    }()
+    
+    lazy var ingredientsListStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.spacing = 16
+        stackView.alignment = .leading
+        
+        return stackView
+    }()
+    
+    lazy var instructionContent: UILabel = {
+        let label = UILabel()
+        label.text = item?.strInstructions
+        label.font = .systemFont(ofSize: 16)
+        label.textAlignment = .justified
+        label.textColor = .label
+        label.numberOfLines = 0
+        
+        return label
+    }()
+    
+    lazy var ytLink: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16)
+        label.textColor = .label
+        label.numberOfLines = 1
+        
+        return label
+    }()
+    
+    
+    lazy var linkLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16, weight: .semibold)
+        label.textColor = .label
+        label.textAlignment = .center
+        return label
+    }()
     
     private func setupScrollView() {
         view.addSubview(scrollView)
@@ -131,8 +256,6 @@ class DetailViewController: UIViewController {
     }
     
     @objc private func checkboxTapped(_ sender: UIButton) {
-        let selectedIngredient = item?.strIngredients[sender.tag] ?? "Unknown ingredient"
-        
         if sender.currentImage == UIImage(systemName: "square") {
             // change to checked state
             sender.setImage(UIImage(systemName: "checkmark.square.fill"), for: .normal)
@@ -143,7 +266,7 @@ class DetailViewController: UIViewController {
     }
     
     private func createToggleButton(title: String) -> UIButton {
-        let button = UIButton(type: .system)
+        let button = UIButton(type: .system) // linter: SwiftLint (static analytics) - nice to have
         button.setTitle("\(title) ▼", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
         button.addTarget(self, action: #selector(toggleSection(_:)), for: .touchUpInside)
@@ -270,129 +393,4 @@ class DetailViewController: UIViewController {
         webView.heightAnchor.constraint(equalToConstant: 300).isActive = true
         
     }
-    
-    lazy var titleBar: UILabel = {
-        let label = UILabel()
-        label.text = "Loading..." // placeholder with a loading info until the data is successfully received
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .label
-        label.textAlignment = .center
-        return label
-    }()
-    
-    lazy var imageView: UIImageView = {
-        let image = UIImageView()
-        image.contentMode = .scaleAspectFill
-        image.clipsToBounds = true
-        image.layer.cornerRadius = 16
-        image.translatesAutoresizingMaskIntoConstraints = false
-        
-        if let imageUrl = URL(string: item?.strMealThumb ?? "") {
-            URLSession.shared.dataTask(with: imageUrl) { data, _, _ in
-                guard let data else { return }
-                DispatchQueue.main.async {
-                    image.image = UIImage(data: data)
-                }
-            }.resume()
-        } else {
-            image.image = UIImage(systemName: "exclamationmark.circle")
-        }
-        
-        return image
-    }()
-    
-    lazy var areaLabelContainer: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemBlue
-        view.layer.cornerRadius = 8
-        view.layer.masksToBounds = true
-        return view
-    }()
-    
-    lazy var areaLabelImage: UIImageView = {
-        let icon = UIImageView()
-        icon.image = UIImage(systemName: "globe")
-        icon.tintColor = .white
-        icon.frame.size = CGSize(width: 24, height: 24)
-        return icon
-    }()
-    
-    lazy var areaLabel: UILabel = {
-        let label = UILabel()
-        label.text = item?.strArea ?? ""
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .white
-        label.textAlignment = .left
-        label.backgroundColor = .systemBlue
-        label.layer.cornerRadius = 8
-        label.layer.masksToBounds = true
-        return label
-    }()
-    
-    lazy var categoryLabelContainer: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemBlue
-        view.layer.cornerRadius = 8
-        view.layer.masksToBounds = true
-        return view
-    }()
-    
-    lazy var categoryLabelImage: UIImageView = {
-        let icon = UIImageView()
-        icon.image = UIImage(systemName: "shippingbox.fill")
-        icon.tintColor = .white
-        icon.frame.size = CGSize(width: 24, height: 24)
-        return icon
-    }()
-    
-    lazy var categoryLabel: UILabel = {
-        let label = UILabel()
-        label.text = item?.strCategory ?? ""
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .white
-        label.textAlignment = .left
-        label.backgroundColor = .systemBlue
-        label.layer.cornerRadius = 8
-        label.layer.masksToBounds = true
-        return label
-    }()
-    
-    lazy var ingredientsListStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.distribution = .fill
-        stackView.spacing = 16
-        stackView.alignment = .leading
-        
-        return stackView
-    }()
-    
-    lazy var instructionContent: UILabel = {
-        let label = UILabel()
-        label.text = item?.strInstructions
-        label.font = .systemFont(ofSize: 16)
-        label.textAlignment = .justified
-        label.textColor = .label
-        label.numberOfLines = 0
-        
-        return label
-    }()
-    
-    lazy var ytLink: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .label
-        label.numberOfLines = 1
-        
-        return label
-    }()
-    
-    
-    lazy var linkLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = .label
-        label.textAlignment = .center
-        return label
-    }()
 }
